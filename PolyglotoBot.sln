@@ -1,0 +1,25 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.31005.135
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PolyglotoBot", "PolyglotoBot\PolyglotoBot.csproj", "{F428AF7E-0C09-4AF7-9D95-141CCAE248F8}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{F428AF7E-0C09-4AF7-9D95-141CCAE248F8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F428AF7E-0C09-4AF7-9D95-141CCAE248F8}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F428AF7E-0C09-4AF7-9D95-141CCAE248F8}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F428AF7E-0C09-4AF7-9D95-141CCAE248F8}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {BA964596-D9DE-4A6C-8F72-629BA8438512}
+	EndGlobalSection
+EndGlobal
