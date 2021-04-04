@@ -2,7 +2,9 @@ using Microsoft.Bot.Builder;
 using Microsoft.Bot.Builder.Dialogs;
 using Microsoft.Bot.Schema;
 using Microsoft.Extensions.Logging;
+using PolyglotoBot.Enums;
 using PolyglotoBot.Models;
+using PolyglotoBot.Services;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -15,12 +17,16 @@ namespace PolyglotoBot.Dialogs
     public class MainDialog : ComponentDialog
     {
         protected readonly ILogger Logger;
+        private readonly TranslateService TranslateService;
 
-        public MainDialog(ConfigurationVerificationDialog configureDialog, ILogger<MainDialog> logger)
+        public MainDialog(ConfigurationVerificationDialog configureDialog,
+        ILogger<MainDialog> logger,
+        TranslateService translateService)
            : base(nameof(MainDialog))
         {
 
             Logger = logger;
+            TranslateService = translateService;
 
             AddDialog(new TextPrompt(nameof(TextPrompt)));
             AddDialog(configureDialog);
@@ -39,6 +45,9 @@ namespace PolyglotoBot.Dialogs
         private async Task<DialogTurnResult> FirstStepAsync(WaterfallStepContext stepContext, CancellationToken cancellationToken)
         {
             var reply = MessageFactory.Text("Do you want configure me?");
+
+            // TranslateService use case
+            // var test = await TranslateService.GetWordTranslate("Учить", Languages.ru);
 
             reply.SuggestedActions = new SuggestedActions()
             {
