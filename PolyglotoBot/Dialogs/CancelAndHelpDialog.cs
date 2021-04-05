@@ -1,8 +1,3 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
-// Licensed under the MIT License.
-//
-// Generated with Bot Builder V4 SDK Template for Visual Studio CoreBot v4.11.1
-
 using Microsoft.Bot.Builder;
 using Microsoft.Bot.Builder.Dialogs;
 using Microsoft.Bot.Schema;
@@ -14,7 +9,7 @@ namespace PolyglotoBot.Dialogs
     public class CancelAndHelpDialog : ComponentDialog
     {
         private const string HelpMsgText = "Show help here";
-        private const string CancelMsgText = "Cancelling...";
+        private const string CancelMsgText = "Oh, okay. I`m Cancelling...";
 
         public CancelAndHelpDialog(string id)
             : base(id)
