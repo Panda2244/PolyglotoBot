@@ -2,11 +2,14 @@ using Microsoft.Bot.Builder;
 using Microsoft.Bot.Builder.Dialogs;
 using Microsoft.Bot.Schema;
 using Microsoft.Extensions.Logging;
+using PolyglotoBot.DB;
 using PolyglotoBot.Enums;
 using PolyglotoBot.Models;
+using PolyglotoBot.Models.DBModels;
 using PolyglotoBot.Services;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading;
@@ -45,6 +48,8 @@ namespace PolyglotoBot.Dialogs
         private async Task<DialogTurnResult> FirstStepAsync(WaterfallStepContext stepContext, CancellationToken cancellationToken)
         {
             var reply = MessageFactory.Text("Do you want configure me?");
+
+            TestDB();
 
             // TranslateService use case
             // var test = await TranslateService.GetWordTranslate("”чить", Languages.ru);
@@ -146,5 +151,39 @@ namespace PolyglotoBot.Dialogs
             var promptMessage = "What else can I do for you?";
             return await stepContext.ReplaceDialogAsync(InitialDialogId, promptMessage, cancellationToken);
         }
+
+        private void TestDB()
+        {
+            //string dbName = "PolyglotoSqlLite.db";
+            //if (File.Exists(dbName))
+            //{
+            //    File.Delete(dbName);
+            //}
+            try
+            {
+                using (var dbContext = new PolyglotoDbContext())
+                {
+                    //Ensure database is created
+                    dbContext.Database.EnsureCreated();
+                    if (!dbContext.EnRuDictionary.Any())
+                    {
+                        dbContext.EnRuDictionary.AddRange(
+                         new List<EnRuDictionary>() {
+                        new EnRuDictionary { Id=Guid.NewGuid(), EnWord= "an apple", RuWord = "€блоко" },
+                          new EnRuDictionary { Id=Guid.NewGuid(), EnWord= "a table", RuWord = "стол" },
+                             new EnRuDictionary { Id=Guid.NewGuid(), EnWord= "to teach", RuWord = "учить" }
+                            });
+                        dbContext.SaveChanges();
+                    }
+                    foreach (var item in dbContext.EnRuDictionary)
+                    {
+                        Console.WriteLine($"Id={item.Id}");
+                    }
+                }
+            }
+            catch (Exception ex) { var test = ex.Message; }
+        }
+
     }
 }
+
