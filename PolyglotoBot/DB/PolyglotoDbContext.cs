@@ -35,6 +35,14 @@ namespace PolyglotoBot.DB
                 entity.Property(e => e.RuWord);
             });
 
+            modelBuilder.Entity<UserConfigurations>(entity =>
+            {
+                entity.HasKey(e => e.ChatId);
+                entity.HasIndex(e => e.ChatId).IsUnique();
+                entity.Property(e => e.WordCount);
+                entity.Property(e => e.RetryCount);
+            });
+
             modelBuilder.Seed();
 
             base.OnModelCreating(modelBuilder);
