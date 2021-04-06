@@ -5,6 +5,7 @@ using Microsoft.Bot.Builder.Integration.AspNet.Core;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using PolyglotoBot.Bots;
+using PolyglotoBot.DB;
 using PolyglotoBot.Dialogs;
 using PolyglotoBot.Services;
 using System;
@@ -31,6 +32,7 @@ namespace PolyglotoBot
                 c.DefaultRequestHeaders.Add("x-rapidapi-host", "systran-systran-platform-for-language-processing-v1.p.rapidapi.com");
                 //c.DefaultRequestHeaders.Add("useQueryString", "true");
             });
+            services.AddDbContext<PolyglotoDbContext>();
         }
 
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)

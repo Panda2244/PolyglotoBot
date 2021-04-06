@@ -12,5 +12,13 @@ namespace PolyglotoBot.Models.DBModels
         public string EnWord { get; set; }
 
         public string RuWord { get; set; }
+
+        public EnRuDictionary(Guid id, string enWord, string ruWord)
+        {
+            Id = id;
+            EnWord = enWord;
+            RuWord = ruWord;
+        }
+
     }
 }

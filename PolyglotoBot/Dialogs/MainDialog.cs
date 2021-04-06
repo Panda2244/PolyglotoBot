@@ -164,20 +164,21 @@ namespace PolyglotoBot.Dialogs
                 using (var dbContext = new PolyglotoDbContext())
                 {
                     //Ensure database is created
-                    dbContext.Database.EnsureCreated();
+                    //  dbContext.Database.EnsureCreated();
+
+
                     if (!dbContext.EnRuDictionary.Any())
                     {
                         dbContext.EnRuDictionary.AddRange(
                          new List<EnRuDictionary>() {
-                        new EnRuDictionary { Id=Guid.NewGuid(), EnWord= "an apple", RuWord = "€блоко" },
-                          new EnRuDictionary { Id=Guid.NewGuid(), EnWord= "a table", RuWord = "стол" },
-                             new EnRuDictionary { Id=Guid.NewGuid(), EnWord= "to teach", RuWord = "учить" }
+                         new EnRuDictionary (Guid.NewGuid(), "an apple", "€блоко" )
+
                             });
                         dbContext.SaveChanges();
                     }
                     foreach (var item in dbContext.EnRuDictionary)
                     {
-                        Console.WriteLine($"Id={item.Id}");
+                        Console.WriteLine($"Id={item.EnWord}");
                     }
                 }
             }

@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using PolyglotoBot.Models.DBModels;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
@@ -11,11 +12,13 @@ namespace PolyglotoBot.DB
 {
     public class PolyglotoDbContext : DbContext
     {
+        private readonly string DbName = "PolyglotoSqlLite.db";
+
         public DbSet<EnRuDictionary> EnRuDictionary { get; set; }
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
-            optionsBuilder.UseSqlite("Filename=PolyglotoSqlLite.db", options =>
+            optionsBuilder.UseSqlite($"Filename={DbName}", options =>
             {
                 options.MigrationsAssembly(Assembly.GetExecutingAssembly().FullName);
             });
@@ -31,6 +34,9 @@ namespace PolyglotoBot.DB
                 entity.Property(e => e.EnWord);
                 entity.Property(e => e.RuWord);
             });
+
+            modelBuilder.Seed();
+
             base.OnModelCreating(modelBuilder);
         }
     }
