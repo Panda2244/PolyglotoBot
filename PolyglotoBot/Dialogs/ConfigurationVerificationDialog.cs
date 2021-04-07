@@ -37,7 +37,7 @@ namespace PolyglotoBot.Dialogs
                 return await stepContext.PromptAsync(nameof(TextPrompt), new PromptOptions { Prompt = promptMessage }, cancellationToken);
             }
             else {
-               // IMPORTANTLY !!!!!!!!!!!!!!
+                // IMPORTANTLY !!!!!!!!!!!!!!
                 // some logic for saving userConfig -> if user choose 'change' userConfig -> re-save results here by next step
             }
 

@@ -1,5 +1,6 @@
 using Microsoft.Bot.Builder;
 using Microsoft.Bot.Builder.Dialogs;
+using Microsoft.Bot.Connector;
 using Microsoft.Bot.Schema;
 using Microsoft.Extensions.Logging;
 using PolyglotoBot.DB;
@@ -49,8 +50,7 @@ namespace PolyglotoBot.Dialogs
         {
             var reply = MessageFactory.Text("Do you want configure me?");
 
-            TestDB();
-
+            //TestDB();
             // TranslateService use case
             // var test = await TranslateService.GetWordTranslate("Учить", Languages.ru);
 
@@ -142,8 +142,42 @@ namespace PolyglotoBot.Dialogs
 
         private async Task<DialogTurnResult> ConfirmConfigureStepAsync(WaterfallStepContext stepContext, CancellationToken cancellationToken)
         {
-            var reply = MessageFactory.Text($"Configured! Waiting for new word!");
+            await TestAsync(stepContext, cancellationToken);
+            var reply = MessageFactory.Text($"Configured! Wait for new word!");
             return await stepContext.PromptAsync(nameof(TextPrompt), new PromptOptions { Prompt = reply }, cancellationToken);
+        }
+
+        private async Task TestAsync(WaterfallStepContext stepContext, CancellationToken cancellationToken)
+        {
+            var conversationId = stepContext.Context.Activity.Conversation.Id;
+            var recipient = stepContext.Context.Activity.Recipient.Id;
+            var locale = stepContext.Context.Activity.Locale;
+            var from = stepContext.Context.Activity.From.Id;
+            var id = stepContext.Context.Activity.Id;
+
+            try
+            {
+                var userAccount = new ChannelAccount(stepContext.Context.Activity.Recipient.Id, stepContext.Context.Activity.Recipient.Name);
+                var botAccount = new ChannelAccount(stepContext.Context.Activity.From.Id, stepContext.Context.Activity.From.Name);
+                var connector = new ConnectorClient(new Uri(stepContext.Context.Activity.ServiceUrl));
+
+                IMessageActivity message = Activity.CreateMessageActivity();
+                if (!string.IsNullOrEmpty(stepContext.Context.Activity.Conversation.Id) && !string.IsNullOrEmpty(stepContext.Context.Activity.ChannelId))
+                {
+                    message.ChannelId = stepContext.Context.Activity.ChannelId;
+                }
+                else
+                {
+                    conversationId = (await connector.Conversations.CreateDirectConversationAsync(botAccount, userAccount)).Id;
+                }
+                message.From =  userAccount;
+                message.Recipient = botAccount;
+                message.Conversation = new ConversationAccount(id: conversationId);
+                message.Text = "The text you want to send";
+                message.Locale = "en-Us";
+                await connector.Conversations.SendToConversationAsync((Activity)message);
+            }
+            catch (Exception ex) { var test = ex.Message; }
         }
 
         private async Task<DialogTurnResult> FinalStepAsync(WaterfallStepContext stepContext, CancellationToken cancellationToken)
@@ -151,6 +185,8 @@ namespace PolyglotoBot.Dialogs
             var promptMessage = "What else can I do for you?";
             return await stepContext.ReplaceDialogAsync(InitialDialogId, promptMessage, cancellationToken);
         }
+
+
 
         private void TestDB()
         {
