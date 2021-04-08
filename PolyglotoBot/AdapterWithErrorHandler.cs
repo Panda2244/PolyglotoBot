@@ -3,6 +3,11 @@
 //
 // Generated with Bot Builder V4 SDK Template for Visual Studio CoreBot v4.11.1
 
+//Пупа и Лупа пошли за зарплатой
+//Лупа получил за Пупу
+//Ну а Пупа получил диплом крока
+
+
 using Microsoft.Bot.Builder;
 using Microsoft.Bot.Builder.Integration.AspNet.Core;
 using Microsoft.Bot.Builder.TraceExtensions;
