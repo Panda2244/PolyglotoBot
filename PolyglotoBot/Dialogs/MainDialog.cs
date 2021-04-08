@@ -23,6 +23,8 @@ namespace PolyglotoBot.Dialogs
 
 
 
+
+
         public MainDialog(ConfigurationVerificationDialog configureDialog,
         ILogger<MainDialog> logger,
         TranslateService translateService)
