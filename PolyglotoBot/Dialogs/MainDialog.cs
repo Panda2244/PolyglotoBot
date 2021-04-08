@@ -19,6 +19,12 @@ namespace PolyglotoBot.Dialogs
         protected readonly ILogger Logger;
         private readonly TranslateService TranslateService;
 
+
+
+
+
+
+
         public MainDialog(ConfigurationVerificationDialog configureDialog,
         ILogger<MainDialog> logger,
         TranslateService translateService)
