@@ -31,6 +31,7 @@ namespace PolyglotoBot
                 c.DefaultRequestHeaders.Add("x-rapidapi-host", "systran-systran-platform-for-language-processing-v1.p.rapidapi.com");
                 //c.DefaultRequestHeaders.Add("useQueryString", "true");
             });
+            services.AddTransient<IDatePeriodService, DatePeriodService>();
         }
 
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
