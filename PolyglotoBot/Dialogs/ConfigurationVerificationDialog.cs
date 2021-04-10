@@ -2,6 +2,7 @@
 using Microsoft.Bot.Builder.Dialogs;
 using Microsoft.Bot.Schema;
 using PolyglotoBot.Models;
+using PolyglotoBot.Models.DBModels;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -12,7 +13,7 @@ namespace PolyglotoBot.Dialogs
 {
     public class ConfigurationVerificationDialog : CancelAndHelpDialog
     {
-        public Configure userConfig;
+        public UserConfigurations userConfig;
 
         public ConfigurationVerificationDialog()
                    : base(nameof(ConfigurationVerificationDialog))
@@ -29,11 +30,11 @@ namespace PolyglotoBot.Dialogs
 
         private async Task<DialogTurnResult> ShowUserConfigurationStepAsync(WaterfallStepContext stepContext, CancellationToken cancellationToken)
         {
-            userConfig = (Configure)stepContext.Options;
+            userConfig = (UserConfigurations)stepContext.Options;
 
-            if (userConfig.WordsCount == null && userConfig.RetryCount == null)
+            if (userConfig.WordCount == 0 && userConfig.RetryCount == 0)
             {
-                var promptMessage = MessageFactory.Text("*WordsCount* or *RetryCount* is empty, please try again.", InputHints.ExpectingInput);
+                var promptMessage = MessageFactory.Text("*WordsCount* or *RetryCount* is 0 or empty, please try again.", InputHints.ExpectingInput);
                 return await stepContext.PromptAsync(nameof(TextPrompt), new PromptOptions { Prompt = promptMessage }, cancellationToken);
             }
             else {
@@ -41,7 +42,7 @@ namespace PolyglotoBot.Dialogs
                 // some logic for saving userConfig -> if user choose 'change' userConfig -> re-save results here by next step
             }
 
-            var reply = MessageFactory.Text($"You have selected: *{userConfig.WordsCount}* words per day\n\nWith repetition: *{userConfig.RetryCount}* times");
+            var reply = MessageFactory.Text($"You have selected: *{userConfig.WordCount}* words per day\n\nWith repetition: *{userConfig.RetryCount}* times");
 
             reply.SuggestedActions = new SuggestedActions()
             {

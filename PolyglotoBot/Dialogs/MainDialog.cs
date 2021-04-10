@@ -2,6 +2,7 @@ using Microsoft.Bot.Builder;
 using Microsoft.Bot.Builder.Dialogs;
 using Microsoft.Bot.Connector;
 using Microsoft.Bot.Schema;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using PolyglotoBot.DB;
 using PolyglotoBot.Enums;
@@ -22,15 +23,21 @@ namespace PolyglotoBot.Dialogs
     {
         protected readonly ILogger Logger;
         private readonly TranslateService TranslateService;
+        private readonly IMessageSender MessageSender;
+       private readonly PolyglotoDbContext DbContext;
 
         public MainDialog(ConfigurationVerificationDialog configureDialog,
         ILogger<MainDialog> logger,
-        TranslateService translateService)
+        PolyglotoDbContext dbContext,
+        TranslateService translateService,
+        IMessageSender messageSender)
            : base(nameof(MainDialog))
         {
 
             Logger = logger;
             TranslateService = translateService;
+            MessageSender = messageSender;
+            DbContext = dbContext;
 
             AddDialog(new TextPrompt(nameof(TextPrompt)));
             AddDialog(configureDialog);
@@ -49,10 +56,6 @@ namespace PolyglotoBot.Dialogs
         private async Task<DialogTurnResult> FirstStepAsync(WaterfallStepContext stepContext, CancellationToken cancellationToken)
         {
             var reply = MessageFactory.Text("Do you want configure me?");
-
-            //TestDB();
-            // TranslateService use case
-            // var test = await TranslateService.GetWordTranslate("Учить", Languages.ru);
 
             reply.SuggestedActions = new SuggestedActions()
             {
@@ -105,15 +108,25 @@ namespace PolyglotoBot.Dialogs
             try
             {
                 var matches = Regex.Matches(stepContext.Result.ToString(), "([0-9]+)");
-                var wordCount = matches.FirstOrDefault()?.Value;
-                var retryCount = matches.LastOrDefault()?.Value;
 
-                var model = new Configure()
-                {
-                    WordsCount = wordCount,
-                    RetryCount = retryCount
-                };
+                var wordCount = 0;
+                var retryCount = 0;
 
+                int.TryParse(matches.FirstOrDefault()?.Value, out wordCount);
+                int.TryParse(matches.LastOrDefault()?.Value, out retryCount);
+
+                var model = new UserConfigurations(
+                    stepContext.Context.Activity.Conversation.Id,
+                    stepContext.Context.Activity.Recipient.Name,
+                    stepContext.Context.Activity.Recipient.Id,
+                    stepContext.Context.Activity.From.Name,
+                    stepContext.Context.Activity.From.Id,
+                    stepContext.Context.Activity.ServiceUrl,
+                    stepContext.Context.Activity.ChannelId,
+                    wordCount,
+                    retryCount);
+
+                AddOrUpdate(model);
                 return await stepContext.BeginDialogAsync(nameof(ConfigurationVerificationDialog), model, cancellationToken);
 
             }
@@ -142,48 +155,39 @@ namespace PolyglotoBot.Dialogs
 
         private async Task<DialogTurnResult> ConfirmConfigureStepAsync(WaterfallStepContext stepContext, CancellationToken cancellationToken)
         {
-            await TestAsync(stepContext, cancellationToken);
+           // using var dbContext = new PolyglotoDbContext();
+            var userConfigs = DbContext.UserConfigurations.FirstOrDefault(u => u.ConversationId.Equals(stepContext.Context.Activity.Conversation.Id));
+            await MessageSender.SendMessageAsync(userConfigs, "testmessage");
             var reply = MessageFactory.Text($"Configured! Wait for new word!");
             return await stepContext.PromptAsync(nameof(TextPrompt), new PromptOptions { Prompt = reply }, cancellationToken);
-        }
-
-        private async Task TestAsync(WaterfallStepContext stepContext, CancellationToken cancellationToken)
-        {
-            var conversationId = stepContext.Context.Activity.Conversation.Id;
-            var recipient = stepContext.Context.Activity.Recipient.Id;
-            var locale = stepContext.Context.Activity.Locale;
-            var from = stepContext.Context.Activity.From.Id;
-            var id = stepContext.Context.Activity.Id;
-
-            try
-            {
-                var userAccount = new ChannelAccount(stepContext.Context.Activity.Recipient.Id, stepContext.Context.Activity.Recipient.Name);
-                var botAccount = new ChannelAccount(stepContext.Context.Activity.From.Id, stepContext.Context.Activity.From.Name);
-                var connector = new ConnectorClient(new Uri(stepContext.Context.Activity.ServiceUrl));
-
-                IMessageActivity message = Activity.CreateMessageActivity();
-                if (!string.IsNullOrEmpty(stepContext.Context.Activity.Conversation.Id) && !string.IsNullOrEmpty(stepContext.Context.Activity.ChannelId))
-                {
-                    message.ChannelId = stepContext.Context.Activity.ChannelId;
-                }
-                else
-                {
-                    conversationId = (await connector.Conversations.CreateDirectConversationAsync(botAccount, userAccount)).Id;
-                }
-                message.From =  userAccount;
-                message.Recipient = botAccount;
-                message.Conversation = new ConversationAccount(id: conversationId);
-                message.Text = "The text you want to send";
-                message.Locale = "en-Us";
-                await connector.Conversations.SendToConversationAsync((Activity)message);
-            }
-            catch (Exception ex) { var test = ex.Message; }
         }
 
         private async Task<DialogTurnResult> FinalStepAsync(WaterfallStepContext stepContext, CancellationToken cancellationToken)
         {
             var promptMessage = "What else can I do for you?";
             return await stepContext.ReplaceDialogAsync(InitialDialogId, promptMessage, cancellationToken);
+        }
+
+
+        private async Task AddOrUpdate(UserConfigurations model)
+        {
+            try
+            {
+             //   using var dbContext = new PolyglotoDbContext();
+                DbContext.Database.EnsureCreated();
+                if (await DbContext.UserConfigurations
+                .AsNoTracking()
+                .FirstOrDefaultAsync(u => u.ConversationId.Equals(model.ConversationId)) != null)
+                {
+                    DbContext.UserConfigurations.Update(model);
+                }
+                else
+                {
+                   await DbContext.UserConfigurations.AddAsync(model).ConfigureAwait(false);
+                }
+               await DbContext.SaveChangesAsync().ConfigureAwait(false);
+            }
+            catch (Exception ex) { var test = ex; }
         }
 
 

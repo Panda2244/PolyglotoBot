@@ -15,6 +15,7 @@ namespace PolyglotoBot.DB
         private readonly string DbName = "PolyglotoSqlLite.db";
 
         public DbSet<EnRuDictionary> EnRuDictionary { get; set; }
+        public DbSet<UserConfigurations> UserConfigurations { get; set; }
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
@@ -37,10 +38,15 @@ namespace PolyglotoBot.DB
 
             modelBuilder.Entity<UserConfigurations>(entity =>
             {
-                entity.HasKey(e => e.ChatId);
-                entity.HasIndex(e => e.ChatId).IsUnique();
-                entity.Property(e => e.WordCount);
-                entity.Property(e => e.RetryCount);
+                entity.HasKey(e => e.ConversationId);
+                entity.HasIndex(e => e.ConversationId).IsUnique();
+                entity.Property(e => e.RecipientId);
+                entity.Property(e => e.RecipientName);
+                entity.Property(e => e.FromId);
+                entity.Property(e => e.FromName);
+                entity.Property(e => e.ConversationId);
+                entity.Property(e => e.ServiceUrl);
+                entity.Property(e => e.ChannelId);
             });
 
             modelBuilder.Seed();
