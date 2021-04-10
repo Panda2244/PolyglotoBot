@@ -26,6 +26,12 @@ namespace PolyglotoBot.Dialogs
         private readonly IMessageSender MessageSender;
        private readonly PolyglotoDbContext DbContext;
 
+
+
+
+
+
+
         public MainDialog(ConfigurationVerificationDialog configureDialog,
         ILogger<MainDialog> logger,
         PolyglotoDbContext dbContext,

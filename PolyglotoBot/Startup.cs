@@ -33,6 +33,8 @@ namespace PolyglotoBot
             });
             services.AddSingleton<PolyglotoDbContext>();
             services.AddTransient<IMessageSender, MessageSender>();
+            services.AddTransient<IDatePeriodService, DatePeriodService>();
+
         }
 
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
