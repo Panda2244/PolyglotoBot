@@ -1,12 +1,17 @@
 using Microsoft.Bot.Builder;
 using Microsoft.Bot.Builder.Dialogs;
+using Microsoft.Bot.Connector;
 using Microsoft.Bot.Schema;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using PolyglotoBot.DB;
 using PolyglotoBot.Enums;
 using PolyglotoBot.Models;
+using PolyglotoBot.Models.DBModels;
 using PolyglotoBot.Services;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading;
@@ -18,6 +23,8 @@ namespace PolyglotoBot.Dialogs
     {
         protected readonly ILogger Logger;
         private readonly TranslateService TranslateService;
+        private readonly IMessageSender MessageSender;
+       private readonly PolyglotoDbContext DbContext;
 
 
 
@@ -27,12 +34,16 @@ namespace PolyglotoBot.Dialogs
 
         public MainDialog(ConfigurationVerificationDialog configureDialog,
         ILogger<MainDialog> logger,
-        TranslateService translateService)
+        PolyglotoDbContext dbContext,
+        TranslateService translateService,
+        IMessageSender messageSender)
            : base(nameof(MainDialog))
         {
 
             Logger = logger;
             TranslateService = translateService;
+            MessageSender = messageSender;
+            DbContext = dbContext;
 
             AddDialog(new TextPrompt(nameof(TextPrompt)));
             AddDialog(configureDialog);
@@ -51,9 +62,6 @@ namespace PolyglotoBot.Dialogs
         private async Task<DialogTurnResult> FirstStepAsync(WaterfallStepContext stepContext, CancellationToken cancellationToken)
         {
             var reply = MessageFactory.Text("Do you want configure me?");
-
-            // TranslateService use case
-            // var test = await TranslateService.GetWordTranslate("”чить", Languages.ru);
 
             reply.SuggestedActions = new SuggestedActions()
             {
@@ -106,15 +114,25 @@ namespace PolyglotoBot.Dialogs
             try
             {
                 var matches = Regex.Matches(stepContext.Result.ToString(), "([0-9]+)");
-                var wordCount = matches.FirstOrDefault()?.Value;
-                var retryCount = matches.LastOrDefault()?.Value;
 
-                var model = new Configure()
-                {
-                    WordsCount = wordCount,
-                    RetryCount = retryCount
-                };
+                var wordCount = 0;
+                var retryCount = 0;
 
+                int.TryParse(matches.FirstOrDefault()?.Value, out wordCount);
+                int.TryParse(matches.LastOrDefault()?.Value, out retryCount);
+
+                var model = new UserConfigurations(
+                    stepContext.Context.Activity.Conversation.Id,
+                    stepContext.Context.Activity.Recipient.Name,
+                    stepContext.Context.Activity.Recipient.Id,
+                    stepContext.Context.Activity.From.Name,
+                    stepContext.Context.Activity.From.Id,
+                    stepContext.Context.Activity.ServiceUrl,
+                    stepContext.Context.Activity.ChannelId,
+                    wordCount,
+                    retryCount);
+
+                AddOrUpdate(model);
                 return await stepContext.BeginDialogAsync(nameof(ConfigurationVerificationDialog), model, cancellationToken);
 
             }
@@ -143,7 +161,10 @@ namespace PolyglotoBot.Dialogs
 
         private async Task<DialogTurnResult> ConfirmConfigureStepAsync(WaterfallStepContext stepContext, CancellationToken cancellationToken)
         {
-            var reply = MessageFactory.Text($"Configured! Waiting for new word!");
+           // using var dbContext = new PolyglotoDbContext();
+            var userConfigs = DbContext.UserConfigurations.FirstOrDefault(u => u.ConversationId.Equals(stepContext.Context.Activity.Conversation.Id));
+            await MessageSender.SendMessageAsync(userConfigs, "testmessage");
+            var reply = MessageFactory.Text($"Configured! Wait for new word!");
             return await stepContext.PromptAsync(nameof(TextPrompt), new PromptOptions { Prompt = reply }, cancellationToken);
         }
 
@@ -152,5 +173,64 @@ namespace PolyglotoBot.Dialogs
             var promptMessage = "What else can I do for you?";
             return await stepContext.ReplaceDialogAsync(InitialDialogId, promptMessage, cancellationToken);
         }
+
+
+        private async Task AddOrUpdate(UserConfigurations model)
+        {
+            try
+            {
+             //   using var dbContext = new PolyglotoDbContext();
+                DbContext.Database.EnsureCreated();
+                if (await DbContext.UserConfigurations
+                .AsNoTracking()
+                .FirstOrDefaultAsync(u => u.ConversationId.Equals(model.ConversationId)) != null)
+                {
+                    DbContext.UserConfigurations.Update(model);
+                }
+                else
+                {
+                   await DbContext.UserConfigurations.AddAsync(model).ConfigureAwait(false);
+                }
+               await DbContext.SaveChangesAsync().ConfigureAwait(false);
+            }
+            catch (Exception ex) { var test = ex; }
+        }
+
+
+
+        private void TestDB()
+        {
+            //string dbName = "PolyglotoSqlLite.db";
+            //if (File.Exists(dbName))
+            //{
+            //    File.Delete(dbName);
+            //}
+            try
+            {
+                using (var dbContext = new PolyglotoDbContext())
+                {
+                    //Ensure database is created
+                    //  dbContext.Database.EnsureCreated();
+
+
+                    if (!dbContext.EnRuDictionary.Any())
+                    {
+                        dbContext.EnRuDictionary.AddRange(
+                         new List<EnRuDictionary>() {
+                         new EnRuDictionary (Guid.NewGuid(), "an apple", "€блоко" )
+
+                            });
+                        dbContext.SaveChanges();
+                    }
+                    foreach (var item in dbContext.EnRuDictionary)
+                    {
+                        Console.WriteLine($"Id={item.EnWord}");
+                    }
+                }
+            }
+            catch (Exception ex) { var test = ex.Message; }
+        }
+
     }
 }
+

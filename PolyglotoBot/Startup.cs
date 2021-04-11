@@ -5,6 +5,7 @@ using Microsoft.Bot.Builder.Integration.AspNet.Core;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using PolyglotoBot.Bots;
+using PolyglotoBot.DB;
 using PolyglotoBot.Dialogs;
 using PolyglotoBot.Services;
 using System;
@@ -23,7 +24,6 @@ namespace PolyglotoBot
             services.AddSingleton<ConfigurationVerificationDialog>();
             services.AddSingleton<MainDialog>();
             services.AddTransient<IBot, DialogAndWelcomeBot<MainDialog>>();
-            //  services.AddHttpClient<TranslateService>();
             services.AddHttpClient<TranslateService>(c =>
             {
                 c.BaseAddress = new Uri("https://systran-systran-platform-for-language-processing-v1.p.rapidapi.com/");
@@ -31,7 +31,10 @@ namespace PolyglotoBot
                 c.DefaultRequestHeaders.Add("x-rapidapi-host", "systran-systran-platform-for-language-processing-v1.p.rapidapi.com");
                 //c.DefaultRequestHeaders.Add("useQueryString", "true");
             });
+            services.AddSingleton<PolyglotoDbContext>();
+            services.AddTransient<IMessageSender, MessageSender>();
             services.AddTransient<IDatePeriodService, DatePeriodService>();
+
         }
 
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
