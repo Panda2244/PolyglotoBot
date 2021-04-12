@@ -16,6 +16,8 @@ namespace PolyglotoBot.DB
 
         public DbSet<EnRuDictionary> EnRuDictionary { get; set; }
         public DbSet<UserConfigurations> UserConfigurations { get; set; }
+        public DbSet<Results> Results { get; set; }
+        public DbSet<ResultsDictionary> ResultsDictionaries { get; set; }
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
@@ -48,6 +50,21 @@ namespace PolyglotoBot.DB
                 entity.Property(e => e.ServiceUrl);
                 entity.Property(e => e.ChannelId);
             });
+            modelBuilder.Entity<Results>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.HasIndex(e => e.Id).IsUnique();
+                entity.Property(e => e.ChatId);
+                entity.Property(e => e.UserName);
+            });
+            modelBuilder.Entity<ResultsDictionary>(entity =>
+            {
+                entity.HasKey(e => e.Id);
+                entity.HasIndex(e => e.Id).IsUnique();
+                entity.Property(e => e.ResultsId);
+                entity.Property(e => e.Dictionary);
+            });
+
 
             modelBuilder.Seed();
 
