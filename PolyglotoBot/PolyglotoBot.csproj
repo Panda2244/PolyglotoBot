@@ -15,12 +15,18 @@
 
   <ItemGroup>
     <PackageReference Include="Microsoft.AspNetCore.Mvc.NewtonsoftJson" Version="3.1.1" />
+    <PackageReference Include="Microsoft.Azure.WebJobs.Core" Version="3.0.27" />
+    <PackageReference Include="Microsoft.Azure.WebJobs.Extensions.ServiceBus" Version="4.1.0" />
     <PackageReference Include="Microsoft.Bot.Builder.AI.Luis" Version="4.11.1" />
     <PackageReference Include="Microsoft.Bot.Builder.Dialogs" Version="4.11.1" />
     <PackageReference Include="Microsoft.Bot.Builder.Integration.AspNet.Core" Version="4.11.1" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="5.0.4" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="5.0.4" />
+    <PackageReference Include="Microsoft.NET.Sdk.Functions" Version="3.0.11" />
     <PackageReference Include="Microsoft.Recognizers.Text.DataTypes.TimexExpression" Version="1.4.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\PolyglotoDbLibrary\PolyglotoDbLibrary.csproj" />
+    <ProjectReference Include="..\ServiceBusManager\ServiceBusManager.csproj" />
   </ItemGroup>
 
   <ItemGroup>

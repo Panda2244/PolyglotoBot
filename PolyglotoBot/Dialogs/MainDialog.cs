@@ -9,10 +9,13 @@ using PolyglotoBot.Enums;
 using PolyglotoBot.Models;
 using PolyglotoBot.Models.DBModels;
 using PolyglotoBot.Services;
+using ServiceBusManager;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Text;
+using System.Text.Json;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
@@ -24,13 +27,7 @@ namespace PolyglotoBot.Dialogs
         protected readonly ILogger Logger;
         private readonly TranslateService TranslateService;
         private readonly IMessageSender MessageSender;
-       private readonly PolyglotoDbContext DbContext;
-
-
-
-
-
-
+        private readonly PolyglotoDbContext DbContext;
 
         public MainDialog(ConfigurationVerificationDialog configureDialog,
         ILogger<MainDialog> logger,
@@ -39,7 +36,6 @@ namespace PolyglotoBot.Dialogs
         IMessageSender messageSender)
            : base(nameof(MainDialog))
         {
-
             Logger = logger;
             TranslateService = translateService;
             MessageSender = messageSender;
@@ -63,16 +59,16 @@ namespace PolyglotoBot.Dialogs
         {
             var reply = MessageFactory.Text("Do you want configure me?");
 
-            reply.SuggestedActions = new SuggestedActions()
-            {
-                Actions = new List<CardAction>()
-                {
+             reply.SuggestedActions = new SuggestedActions()
+             {
+                 Actions = new List<CardAction>()
+                 {
                     //USE CODES FOR EMOJI http://www.unicode.org/emoji/charts-beta/full-emoji-list.html#1f600 
                     //AND REPLACE '+' to '000'. Like U+1F44D -> \U0001F44D
                     new CardAction() { Title = "Yes \U0001F44D", Type = ActionTypes.ImBack, Value = "Yes" },
                     new CardAction() { Title = "No \U0001F44E", Type = ActionTypes.ImBack, Value = "No" },
-                }
-            };
+                 }
+             };
 
             return await stepContext.PromptAsync(nameof(TextPrompt), new PromptOptions { Prompt = reply }, cancellationToken);
         }
@@ -115,11 +111,8 @@ namespace PolyglotoBot.Dialogs
             {
                 var matches = Regex.Matches(stepContext.Result.ToString(), "([0-9]+)");
 
-                var wordCount = 0;
-                var retryCount = 0;
-
-                int.TryParse(matches.FirstOrDefault()?.Value, out wordCount);
-                int.TryParse(matches.LastOrDefault()?.Value, out retryCount);
+                int.TryParse(matches.FirstOrDefault()?.Value, out int wordCount);
+                int.TryParse(matches.LastOrDefault()?.Value, out int retryCount);
 
                 var model = new UserConfigurations(
                     stepContext.Context.Activity.Conversation.Id,
@@ -132,7 +125,7 @@ namespace PolyglotoBot.Dialogs
                     wordCount,
                     retryCount);
 
-                AddOrUpdate(model);
+                await AddOrUpdate(model).ConfigureAwait(false);
                 return await stepContext.BeginDialogAsync(nameof(ConfigurationVerificationDialog), model, cancellationToken);
 
             }
@@ -161,9 +154,15 @@ namespace PolyglotoBot.Dialogs
 
         private async Task<DialogTurnResult> ConfirmConfigureStepAsync(WaterfallStepContext stepContext, CancellationToken cancellationToken)
         {
-           // using var dbContext = new PolyglotoDbContext();
+            // using var dbContext = new PolyglotoDbContext();
             var userConfigs = DbContext.UserConfigurations.FirstOrDefault(u => u.ConversationId.Equals(stepContext.Context.Activity.Conversation.Id));
-            await MessageSender.SendMessageAsync(userConfigs, "testmessage");
+
+            var json = JsonSerializer.Serialize(new ScheduleMessageModel(userConfigs.ConversationId, "1 minute test"));
+            await ServiceBusService.SendScheduleMessage(Encoding.UTF8.GetBytes(json), 10);
+
+            //json = JsonSerializer.Serialize(new ScheduleMessageModel(userConfigs.ConversationId, "2 minute test"));
+            //await ServiceBusService.SendScheduleMessage(Encoding.UTF8.GetBytes(json), 120);
+
             var reply = MessageFactory.Text($"Configured! Wait for new word!");
             return await stepContext.PromptAsync(nameof(TextPrompt), new PromptOptions { Prompt = reply }, cancellationToken);
         }
@@ -179,7 +178,7 @@ namespace PolyglotoBot.Dialogs
         {
             try
             {
-             //   using var dbContext = new PolyglotoDbContext();
+                //   using var dbContext = new PolyglotoDbContext();
                 DbContext.Database.EnsureCreated();
                 if (await DbContext.UserConfigurations
                 .AsNoTracking()
@@ -189,48 +188,12 @@ namespace PolyglotoBot.Dialogs
                 }
                 else
                 {
-                   await DbContext.UserConfigurations.AddAsync(model).ConfigureAwait(false);
+                    await DbContext.UserConfigurations.AddAsync(model).ConfigureAwait(false);
                 }
-               await DbContext.SaveChangesAsync().ConfigureAwait(false);
+                await DbContext.SaveChangesAsync().ConfigureAwait(false);
             }
             catch (Exception ex) { var test = ex; }
         }
-
-
-
-        private void TestDB()
-        {
-            //string dbName = "PolyglotoSqlLite.db";
-            //if (File.Exists(dbName))
-            //{
-            //    File.Delete(dbName);
-            //}
-            try
-            {
-                using (var dbContext = new PolyglotoDbContext())
-                {
-                    //Ensure database is created
-                    //  dbContext.Database.EnsureCreated();
-
-
-                    if (!dbContext.EnRuDictionary.Any())
-                    {
-                        dbContext.EnRuDictionary.AddRange(
-                         new List<EnRuDictionary>() {
-                         new EnRuDictionary (Guid.NewGuid(), "an apple", "€блоко" )
-
-                            });
-                        dbContext.SaveChanges();
-                    }
-                    foreach (var item in dbContext.EnRuDictionary)
-                    {
-                        Console.WriteLine($"Id={item.EnWord}");
-                    }
-                }
-            }
-            catch (Exception ex) { var test = ex.Message; }
-        }
-
     }
 }
 
