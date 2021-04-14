@@ -3,7 +3,11 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 16
 VisualStudioVersion = 16.0.31005.135
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PolyglotoBot", "PolyglotoBot\PolyglotoBot.csproj", "{F428AF7E-0C09-4AF7-9D95-141CCAE248F8}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PolyglotoBot", "PolyglotoBot\PolyglotoBot.csproj", "{F428AF7E-0C09-4AF7-9D95-141CCAE248F8}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PolyglotoDbLibrary", "PolyglotoDbLibrary\PolyglotoDbLibrary.csproj", "{8FB353B1-597D-40C2-B887-DE19C9F777BA}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ServiceBusManager", "ServiceBusManager\ServiceBusManager.csproj", "{6C683CD3-A596-44F5-AA5E-68A483705F7C}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -15,6 +19,14 @@ Global
 		{F428AF7E-0C09-4AF7-9D95-141CCAE248F8}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{F428AF7E-0C09-4AF7-9D95-141CCAE248F8}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{F428AF7E-0C09-4AF7-9D95-141CCAE248F8}.Release|Any CPU.Build.0 = Release|Any CPU
+		{8FB353B1-597D-40C2-B887-DE19C9F777BA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8FB353B1-597D-40C2-B887-DE19C9F777BA}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8FB353B1-597D-40C2-B887-DE19C9F777BA}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8FB353B1-597D-40C2-B887-DE19C9F777BA}.Release|Any CPU.Build.0 = Release|Any CPU
+		{6C683CD3-A596-44F5-AA5E-68A483705F7C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6C683CD3-A596-44F5-AA5E-68A483705F7C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{6C683CD3-A596-44F5-AA5E-68A483705F7C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6C683CD3-A596-44F5-AA5E-68A483705F7C}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

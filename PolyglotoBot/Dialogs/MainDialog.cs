@@ -9,10 +9,13 @@ using PolyglotoBot.Enums;
 using PolyglotoBot.Models;
 using PolyglotoBot.Models.DBModels;
 using PolyglotoBot.Services;
+using ServiceBusManager;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Text;
+using System.Text.Json;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
@@ -35,7 +38,6 @@ namespace PolyglotoBot.Dialogs
         DefinitionService definitionService)
            : base(nameof(MainDialog))
         {
-
             Logger = logger;
             TranslateService = translateService;
             MessageSender = messageSender;
@@ -119,11 +121,8 @@ namespace PolyglotoBot.Dialogs
             {
                 var matches = Regex.Matches(stepContext.Result.ToString(), "([0-9]+)");
 
-                var wordCount = 0;
-                var retryCount = 0;
-
-                int.TryParse(matches.FirstOrDefault()?.Value, out wordCount);
-                int.TryParse(matches.LastOrDefault()?.Value, out retryCount);
+                int.TryParse(matches.FirstOrDefault()?.Value, out int wordCount);
+                int.TryParse(matches.LastOrDefault()?.Value, out int retryCount);
 
                 var model = new UserConfigurations(
                     stepContext.Context.Activity.Conversation.Id,
@@ -136,7 +135,7 @@ namespace PolyglotoBot.Dialogs
                     wordCount,
                     retryCount);
 
-                AddOrUpdate(model);
+                await AddOrUpdate(model).ConfigureAwait(false);
                 return await stepContext.BeginDialogAsync(nameof(ConfigurationVerificationDialog), model, cancellationToken);
 
             }
@@ -165,9 +164,15 @@ namespace PolyglotoBot.Dialogs
 
         private async Task<DialogTurnResult> ConfirmConfigureStepAsync(WaterfallStepContext stepContext, CancellationToken cancellationToken)
         {
-           // using var dbContext = new PolyglotoDbContext();
+            // using var dbContext = new PolyglotoDbContext();
             var userConfigs = DbContext.UserConfigurations.FirstOrDefault(u => u.ConversationId.Equals(stepContext.Context.Activity.Conversation.Id));
-            await MessageSender.SendMessageAsync(userConfigs, "testmessage");
+
+            var json = JsonSerializer.Serialize(new ScheduleMessageModel(userConfigs.ConversationId, "1 minute test"));
+            await ServiceBusService.SendScheduleMessage(Encoding.UTF8.GetBytes(json), 10);
+
+            //json = JsonSerializer.Serialize(new ScheduleMessageModel(userConfigs.ConversationId, "2 minute test"));
+            //await ServiceBusService.SendScheduleMessage(Encoding.UTF8.GetBytes(json), 120);
+
             var reply = MessageFactory.Text($"Configured! Wait for new word!");
             return await stepContext.PromptAsync(nameof(TextPrompt), new PromptOptions { Prompt = reply }, cancellationToken);
         }
@@ -183,7 +188,7 @@ namespace PolyglotoBot.Dialogs
         {
             try
             {
-             //   using var dbContext = new PolyglotoDbContext();
+                //   using var dbContext = new PolyglotoDbContext();
                 DbContext.Database.EnsureCreated();
                 if (await DbContext.UserConfigurations
                 .AsNoTracking()
@@ -193,9 +198,9 @@ namespace PolyglotoBot.Dialogs
                 }
                 else
                 {
-                   await DbContext.UserConfigurations.AddAsync(model).ConfigureAwait(false);
+                    await DbContext.UserConfigurations.AddAsync(model).ConfigureAwait(false);
                 }
-               await DbContext.SaveChangesAsync().ConfigureAwait(false);
+                await DbContext.SaveChangesAsync().ConfigureAwait(false);
             }
             catch (Exception ex) { var test = ex; }
         }

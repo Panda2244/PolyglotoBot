@@ -9,6 +9,7 @@ using PolyglotoBot.DB;
 using PolyglotoBot.Dialogs;
 using PolyglotoBot.Services;
 using System;
+using System.Threading.Tasks;
 
 namespace PolyglotoBot
 {
@@ -38,6 +39,7 @@ namespace PolyglotoBot
                 //c.DefaultRequestHeaders.Add("useQueryString", "true");
             });
             services.AddSingleton<PolyglotoDbContext>();
+            services.AddSingleton<IServicebusTrigger, ServicebusTrigger>();
             services.AddTransient<IMessageSender, MessageSender>();
             services.AddTransient<IDatePeriodService, DatePeriodService>();
 
