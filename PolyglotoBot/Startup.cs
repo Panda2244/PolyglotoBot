@@ -25,6 +25,12 @@ namespace PolyglotoBot
             services.AddSingleton<ConfigurationVerificationDialog>();
             services.AddSingleton<MainDialog>();
             services.AddTransient<IBot, DialogAndWelcomeBot<MainDialog>>();
+            services.AddHttpClient<DefinitionService>(c =>
+            {
+                c.BaseAddress = new Uri("https://twinword-word-graph-dictionary.p.rapidapi.com/");
+                c.DefaultRequestHeaders.Add("x-rapidapi-key", "c37a88260cmsh41c47505a2d4263p19c42cjsn9311e035e535");
+                c.DefaultRequestHeaders.Add("x-rapidapi-host", "twinword-word-graph-dictionary.p.rapidapi.com");
+            });
             services.AddHttpClient<TranslateService>(c =>
             {
                 c.BaseAddress = new Uri("https://systran-systran-platform-for-language-processing-v1.p.rapidapi.com/");

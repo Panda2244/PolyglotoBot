@@ -28,18 +28,21 @@ namespace PolyglotoBot.Dialogs
         private readonly TranslateService TranslateService;
         private readonly IMessageSender MessageSender;
         private readonly PolyglotoDbContext DbContext;
+        private readonly DefinitionService DefinitionService;
 
         public MainDialog(ConfigurationVerificationDialog configureDialog,
         ILogger<MainDialog> logger,
         PolyglotoDbContext dbContext,
         TranslateService translateService,
-        IMessageSender messageSender)
+        IMessageSender messageSender,
+        DefinitionService definitionService)
            : base(nameof(MainDialog))
         {
             Logger = logger;
             TranslateService = translateService;
             MessageSender = messageSender;
             DbContext = dbContext;
+            DefinitionService = definitionService;
 
             AddDialog(new TextPrompt(nameof(TextPrompt)));
             AddDialog(configureDialog);
@@ -57,18 +60,25 @@ namespace PolyglotoBot.Dialogs
         }
         private async Task<DialogTurnResult> FirstStepAsync(WaterfallStepContext stepContext, CancellationToken cancellationToken)
         {
-            var reply = MessageFactory.Text("Do you want configure me?");
+            var listDefinition = await DefinitionService.DefinitionAsync("mask");
 
-             reply.SuggestedActions = new SuggestedActions()
-             {
-                 Actions = new List<CardAction>()
-                 {
+            /* var reply = MessageFactory.Text("Do you want configure me?");*/
+            string result = string.Empty;
+            foreach (var item in listDefinition)
+            {
+                result += $"\U0001F47D	{item}\n";
+            }
+            var reply = MessageFactory.Text(result);
+            reply.SuggestedActions = new SuggestedActions()
+            {
+                Actions = new List<CardAction>()
+                {
                     //USE CODES FOR EMOJI http://www.unicode.org/emoji/charts-beta/full-emoji-list.html#1f600 
                     //AND REPLACE '+' to '000'. Like U+1F44D -> \U0001F44D
-                    new CardAction() { Title = "Yes \U0001F44D", Type = ActionTypes.ImBack, Value = "Yes" },
                     new CardAction() { Title = "No \U0001F44E", Type = ActionTypes.ImBack, Value = "No" },
-                 }
-             };
+                    new CardAction() { Title = "Yes \U0001F44D", Type = ActionTypes.ImBack, Value = "Yes" },
+                }
+            };
 
             return await stepContext.PromptAsync(nameof(TextPrompt), new PromptOptions { Prompt = reply }, cancellationToken);
         }
@@ -194,6 +204,42 @@ namespace PolyglotoBot.Dialogs
             }
             catch (Exception ex) { var test = ex; }
         }
+
+
+
+        private void TestDB()
+        {
+            //string dbName = "PolyglotoSqlLite.db";
+            //if (File.Exists(dbName))
+            //{
+            //    File.Delete(dbName);
+            //}
+            try
+            {
+                using (var dbContext = new PolyglotoDbContext())
+                {
+                    //Ensure database is created
+                    dbContext.Database.EnsureCreated();
+
+
+                    if (!dbContext.Results.Any())
+                    {
+                        dbContext.Results.AddRange(
+                         new List<Results>() {
+                         new Results ("1", "2", "3" )
+
+                            });
+                        dbContext.SaveChanges();
+                    }
+                    foreach (var item in dbContext.Results)
+                    {
+                        Console.WriteLine($"Id={item.Id}");
+                    }
+                }
+            }
+            catch (Exception ex) { var test = ex.Message; }
+        }
+
     }
 }
 
